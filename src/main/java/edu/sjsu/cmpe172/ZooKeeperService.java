@@ -19,11 +19,11 @@ import java.util.concurrent.CountDownLatch;
 public class ZooKeeperService implements Watcher {
     private static final Logger logger = LoggerFactory.getLogger(ZooKeeperService.class);
 
-    private static final String PEERS_PATH = "/peers";
-    private static final String LEADER_PATH = "/leader";
-
     @Value("${zkConnectString}")
     private String zkConnectString;
+
+    @Value("${zkNamespace:}")
+    private String zkNamespace;
 
     @Value("${myDescription}")
     private String myDescription;
@@ -33,6 +33,9 @@ public class ZooKeeperService implements Watcher {
 
     @Value("${zookeeper.connection.timeout:5000}")
     private int connectionTimeout;
+
+    private String PEERS_PATH;
+    private String LEADER_PATH;
 
     private ZooKeeper zooKeeper;
     private String myId;
@@ -46,7 +49,14 @@ public class ZooKeeperService implements Watcher {
 
     @PostConstruct
     public void init() throws IOException, InterruptedException, KeeperException {
+        // Initialize paths with namespace
+        String prefix = (zkNamespace != null && !zkNamespace.isEmpty()) ? "/" + zkNamespace : "";
+        PEERS_PATH = prefix + "/peers";
+        LEADER_PATH = prefix + "/leader";
+
         logger.info("Initializing ZooKeeper connection to: {}", zkConnectString);
+        logger.info("Using namespace: {}", zkNamespace != null && !zkNamespace.isEmpty() ? zkNamespace : "(none)");
+        logger.info("Peers path: {}, Leader path: {}", PEERS_PATH, LEADER_PATH);
         connect();
     }
 
@@ -78,6 +88,16 @@ public class ZooKeeperService implements Watcher {
             } catch (KeeperException.NodeExistsException e) {
                 // Another node created it, that's fine
                 logger.debug("Path already exists: {}", path);
+            } catch (KeeperException.NoNodeException e) {
+                // Parent path doesn't exist, create it first
+                String parentPath = path.substring(0, path.lastIndexOf('/'));
+                if (parentPath.length() > 0) {
+                    createPathIfNotExists(parentPath);
+                    // Now try creating this path again
+                    createPathIfNotExists(path);
+                } else {
+                    throw e;
+                }
             }
         }
     }
