@@ -53,7 +53,7 @@ public class ZooKeeperService implements Watcher {
         String prefix = (zkNamespace != null && !zkNamespace.isEmpty()) ? "/" + zkNamespace : "";
         PEERS_PATH = prefix + "/peers";
         LEADER_PATH = prefix + "/leader";
-
+        
         logger.info("Initializing ZooKeeper connection to: {}", zkConnectString);
         logger.info("Using namespace: {}", zkNamespace != null && !zkNamespace.isEmpty() ? zkNamespace : "(none)");
         logger.info("Peers path: {}, Leader path: {}", PEERS_PATH, LEADER_PATH);
