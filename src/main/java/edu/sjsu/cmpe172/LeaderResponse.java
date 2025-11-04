@@ -3,12 +3,12 @@ package edu.sjsu.cmpe172;
 import java.util.List;
 
 public class LeaderResponse {
-    private String status;
-    private String zookeeper;
-    private String leader;
-    private String myid;
-    private String description;
-    private List<String> peers;
+    private String status;    // Current leader status
+    private String zookeeper; // ZooKeeper connection status
+    private String leader;    // Current Leader ID
+    private String myid;      // own ID
+    private String description;  //Node description
+    private List<String> peers;  // List of all peer nodes
 
     public LeaderResponse() {}
 
