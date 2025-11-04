@@ -20,7 +20,7 @@ public class ZooKeeperService implements Watcher {
     // Implement the Watcher interface: used to listen for ZooKeeper events
     private static final Logger logger = LoggerFactory.getLogger(ZooKeeperService.class);
 
-    @Value("${zkConnectString}")
+    @Value("${zkConnectString}")                           // reference:https://www.baeldung.com/spring-value-defaults
     // Read the value of zkConnectString from application.properties
     private String zkConnectString;
 
@@ -32,7 +32,7 @@ public class ZooKeeperService implements Watcher {
     // My node description
     private String myDescription;
 
-    @Value("${zookeeper.session.timeout:5000}")
+    @Value("${zookeeper.session.timeout:5000}")              // reference: https://www.geeksforgeeks.org/devops/sessions-and-lifecycle-in-zookeeper/
     // Session timeout, default 5000 milliseconds (5 seconds)
     // If no heartbeat occurs within this time, ZooKeeper considers the client to be down.
     private int sessionTimeout;
@@ -56,7 +56,7 @@ public class ZooKeeperService implements Watcher {
     // The initial value is 1. Calling await() will block. After calling countDown(), the value becomes 0, and await() will unblock.
     private final CountDownLatch connectedSignal = new CountDownLatch(1);
 
-    @PostConstruct
+    @PostConstruct                           // reference: https://docs.spring.io/spring-framework/reference/core/beans/annotation-config/postconstruct-and-predestroy-annotations.html
     // Create a new object → inject @Value → call the @PostConstruct method
     public void init() throws IOException, InterruptedException, KeeperException {
         // Initialization method: Connect to ZooKeeper
@@ -172,7 +172,7 @@ public class ZooKeeperService implements Watcher {
             logger.error("Error updating peers list", e);
         }
     }
-
+                                            // reference: https://codemia.io/knowledge-hub/path/how_to_re-register_zookeeper_watches
     private void watchLeader() {
         // Listen to the leader node
         try {
@@ -290,7 +290,7 @@ public class ZooKeeperService implements Watcher {
         watchLeader();  // Continue listening (although not participating in the election)
     }
 
-    @Override
+    @Override                                                               // reference:https://ishan-aggarwal.medium.com/leader-election-distributed-systems-c026cf5afb86
     public void process(WatchedEvent event) {
         // This callback is triggered by all events in ZooKeeper.
         logger.info("Received event: {}", event);
@@ -357,7 +357,7 @@ public class ZooKeeperService implements Watcher {
         // If wantToLead=true, attempt to run for leader.
     }
 
-    @PreDestroy
+    @PreDestroy                   // reference:https://www.geeksforgeeks.org/java/bean-life-cycle-in-java-spring/ https://www.geeksforgeeks.org/devops/sessions-and-lifecycle-in-zookeeper/
     // Execution timing: When the application is closed
     public void cleanup() {
         // Clean up resources
