@@ -12,30 +12,45 @@ public class LeaderController {
     private ZooKeeperService zooKeeperService;
 
     @GetMapping
+    // Handling GET requests: GET http://localhost:8082/leader
     public ResponseEntity<LeaderResponse> getLeaderStatus() {
-        LeaderResponse response = new LeaderResponse(
-                zooKeeperService.getLeaderStatus().name(),
-                zooKeeperService.getZkStatus().name(),
-                zooKeeperService.getCurrentLeader(),
-                zooKeeperService.getMyId(),
-                zooKeeperService.getMyDescription(),
-                zooKeeperService.getPeers()
-        );
+        // This method returns the current state of the cluster
 
+        // Create a response object and package various information
+        LeaderResponse response = new LeaderResponse(
+            // Convert the enumeration to a string
+                zooKeeperService.getLeaderStatus().name(),  // my status
+                zooKeeperService.getZkStatus().name(),      // connection status
+                zooKeeperService.getCurrentLeader(),        // current leader
+                zooKeeperService.getMyId(),                 // my ID
+                zooKeeperService.getMyDescription(),        // my description
+                zooKeeperService.getPeers()                 // all nodes
+        );
+        // The response returns HTTP 200 OK, and the body is a JSON response.
         return ResponseEntity.ok(response);
     }
     
-    // POST /leader/watch - Relinquish leadership and simply observe
+    // Handle a POST request: POST http://localhost:8082/leader/watch
+    // Test with curl: curl -X POST http://localhost:8082/leader/watch
     @PostMapping("/watch")
     public ResponseEntity<String> watch() {
+        // This method causes the node to stop election and enter observer mode.
         zooKeeperService.stopLeading();
+        // If I were the leader, I would relinquish leadership.
+
+        // Change the status to WATCHING.
         return ResponseEntity.ok("Now watching (not trying to lead)");
     }
     
-    // POST /leader/lead - Participate in leadership election
+    // Handle a POST request: POST http://localhost:8082/leader/lead
+    // Test with curl: curl -X POST http://localhost:8082/leader/lead
     @PostMapping("/lead")
     public ResponseEntity<String> lead() {
+        // This method allows nodes to begin electing a leader.
         zooKeeperService.startLeading();
+        // Set the "I want to be a leader" flag
+        // If there is no leader, attempt to become a leader
+        // If there is a leader, enter a waiting state
         return ResponseEntity.ok("Now trying to become leader");
     }
 }
