@@ -75,7 +75,7 @@ public class ZooKeeperService implements Watcher {
         connect();
     }
 
-    private void connect() throws IOException, InterruptedException, KeeperException {
+    private void connect() throws IOException, InterruptedException, KeeperException {           // reference: https://www.baeldung.com/java-zookeeper
         // Create a ZooKeeper client
         zooKeeper = new ZooKeeper(zkConnectString, sessionTimeout, this);
 
@@ -99,18 +99,18 @@ public class ZooKeeperService implements Watcher {
         // Check if there is a leader; if not, try to become a leader.
     }
 
-    private void createPathIfNotExists(String path) throws KeeperException, InterruptedException {
+    private void createPathIfNotExists(String path) throws KeeperException, InterruptedException {    // reference:https://ishan-aggarwal.medium.com/leader-election-distributed-systems-c026cf5afb86
         // Create the path (if it does not exist)
 
         // Check if the path exists
-        Stat stat = zooKeeper.exists(path, false);
+        Stat stat = zooKeeper.exists(path, false);             // reference:https://zookeeper.apache.org/doc/r3.4.6/api/org/apache/zookeeper/ZooKeeper.html
         // Parameters:
         // path: Path
         // false: Do not set a listener
         // Return value: Returns a Stat object if it exists, otherwise returns null.
         if (stat == null) {
             // The path does not exist, create it.
-            try {
+            try {                                                                // reference: https://zookeeper.apache.org/doc/r3.1.2/zookeeperTutorial.html
                 zooKeeper.create(path,                     // Path 
                                  new byte[0],              // Data (empty)
                                  ZooDefs.Ids.OPEN_ACL_UNSAFE,  // Permissions (Fully Open)
@@ -119,7 +119,7 @@ public class ZooKeeperService implements Watcher {
                 // Will not be automatically deleted
                 // Suitable for creating directories
                 logger.info("Created path: {}", path);
-            } catch (KeeperException.NodeExistsException e) {
+            } catch (KeeperException.NodeExistsException e) {                    // reference: https://zookeeper.apache.org/doc/r3.1.2/zookeeperTutorial.html
                 // Another node created it, that's fine
                 logger.debug("Path already exists: {}", path);
             } catch (KeeperException.NoNodeException e) {
@@ -137,7 +137,7 @@ public class ZooKeeperService implements Watcher {
         }
     }
 
-    private void registerAsPeer() throws KeeperException, InterruptedException {
+    private void registerAsPeer() throws KeeperException, InterruptedException {              // reference: https://zookeeper.apache.org/doc/r3.1.2/zookeeperTutorial.html
         // Register as a node in the cluster
         String peerPath = zooKeeper.create(
                 PEERS_PATH + "/peer-",            // path prefix
@@ -154,11 +154,11 @@ public class ZooKeeperService implements Watcher {
         logger.info("Registered as peer: {}", myId);
     }
 
-    private void updatePeersList() {
+    private void updatePeersList() {                      // reference: https://bikas-katwal.medium.com/zookeeper-introduction-designing-a-distributed-system-using-zookeeper-and-java-7f1b108e236e
         // Update node list
         try {
             // Get all child nodes under peers
-            peers = zooKeeper.getChildren(PEERS_PATH, this); 
+            peers = zooKeeper.getChildren(PEERS_PATH, this);           // reference: https://zookeeper.apache.org/doc/r3.4.8/api/org/apache/zookeeper/ZooKeeper.html
             // PEERS_PATH: Parent path
             // this: Sets the listener (to notify me when there are changes)
 
@@ -225,7 +225,7 @@ public class ZooKeeperService implements Watcher {
         }
     }
 
-    private void tryToBecomeLeader() {
+    private void tryToBecomeLeader() {                    // reference: https://zookeeper.apache.org/doc/r3.1.2/zookeeperTutorial.html
         // Try to become a leader
         // Principle: Whoever creates the /leader node first becomes the leader.
         try {
@@ -272,7 +272,7 @@ public class ZooKeeperService implements Watcher {
         wantsToLead = false;  // clear flag
 
         // If we're currently the leader, give up leadership
-        if (leaderStatus == LeaderStatus.LEADING) {
+        if (leaderStatus == LeaderStatus.LEADING) {             // reference: https://www.php.net/manual/en/zookeeper.delete.php
             try {
                 zooKeeper.delete(LEADER_PATH, -1);
                 // Delete the /leader node
