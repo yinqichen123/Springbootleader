@@ -13,7 +13,7 @@ public class LeaderResponse {
     public LeaderResponse() {}
 
     public LeaderResponse(String status, String zookeeper, String leader,                      // reference: https://learn.microsoft.com/en-us/azure/architecture/patterns/leader-election
-                          String myid, String description, List<String> peers) {
+                          String myid, String description, List<String> peers) {               // reference: https://zookeeper.apache.org/doc/r3.1.2/javaExample.html
         // Create response object
         this.status = status;
         this.zookeeper = zookeeper;
