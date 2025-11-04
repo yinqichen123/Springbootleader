@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/leader")
 public class LeaderController {
-
+    // GET /leader - Get the current cluster status
     @Autowired
     private ZooKeeperService zooKeeperService;
 
@@ -24,13 +24,15 @@ public class LeaderController {
 
         return ResponseEntity.ok(response);
     }
-
+    
+    // POST /leader/watch - Relinquish leadership and simply observe
     @PostMapping("/watch")
     public ResponseEntity<String> watch() {
         zooKeeperService.stopLeading();
         return ResponseEntity.ok("Now watching (not trying to lead)");
     }
-
+    
+    // POST /leader/lead - Participate in leadership election
     @PostMapping("/lead")
     public ResponseEntity<String> lead() {
         zooKeeperService.startLeading();
