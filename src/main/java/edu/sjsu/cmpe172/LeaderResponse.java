@@ -12,7 +12,7 @@ public class LeaderResponse {
 
     public LeaderResponse() {}
 
-    public LeaderResponse(String status, String zookeeper, String leader,
+    public LeaderResponse(String status, String zookeeper, String leader,                      // reference: https://learn.microsoft.com/en-us/azure/architecture/patterns/leader-election
                           String myid, String description, List<String> peers) {
         // Create response object
         this.status = status;
@@ -23,7 +23,7 @@ public class LeaderResponse {
         this.peers = peers;
     }
 
-    // Getters and Setters
+    // Getters and Setters                         // reference: https://docs.spring.io/spring-boot/reference/actuator/endpoints.html
     public String getStatus() {
         return status;
     }
