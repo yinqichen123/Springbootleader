@@ -4,14 +4,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@RestController
-@RequestMapping("/leader")
+@RestController                                     // reference:https://www.baeldung.com/spring-boot-customize-jackson-objectmapper
+@RequestMapping("/leader")                          // reference: https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-requestmapping.html
 public class LeaderController {
     // GET /leader - Get the current cluster status
-    @Autowired
+    @Autowired                                        // reference:https://medium.com/devdomain/spring-boots-autowired-vs-constructor-injection-a-detailed-guide-1b19970d828e
     private ZooKeeperService zooKeeperService;
 
-    @GetMapping
+    @GetMapping                                                    // reference: https://spring.io/guides/tutorials/rest
     // Handling GET requests: GET http://localhost:8082/leader
     public ResponseEntity<LeaderResponse> getLeaderStatus() {
         // This method returns the current state of the cluster
@@ -32,7 +32,7 @@ public class LeaderController {
     
     // Handle a POST request: POST http://localhost:8082/leader/watch
     // Test with curl: curl -X POST http://localhost:8082/leader/watch
-    @PostMapping("/watch")
+    @PostMapping("/watch")                                          // reference: https://www.baeldung.com/spring-new-requestmapping-shortcuts
     public ResponseEntity<String> watch() {
         // This method causes the node to stop election and enter observer mode.
         zooKeeperService.stopLeading();
