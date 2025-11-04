@@ -256,7 +256,7 @@ public class ZooKeeperService implements Watcher {
         }
     }
 
-    public void startLeading() {
+    public void startLeading() {                                      
         // Start running for leader
         wantsToLead = true;  // Set flag: I want to be a leader
         if (zkStatus == ZooKeeperStatus.CONNECTED) {
@@ -358,8 +358,8 @@ public class ZooKeeperService implements Watcher {
     }
 
     @PreDestroy                   // reference:https://www.geeksforgeeks.org/java/bean-life-cycle-in-java-spring/ https://www.geeksforgeeks.org/devops/sessions-and-lifecycle-in-zookeeper/
-    // Execution timing: When the application is closed
-    public void cleanup() {
+    // Execution timing: When the application is closed            
+    public void cleanup() {                              // reference: https://www.waitingforcode.com/apache-zookeeper/session-in-apache-zookeeper/read
         // Clean up resources
         try {
             if (zooKeeper != null) {
