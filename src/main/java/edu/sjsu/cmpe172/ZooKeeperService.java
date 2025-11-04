@@ -49,18 +49,20 @@ public class ZooKeeperService implements Watcher {
 
     @PostConstruct
     public void init() throws IOException, InterruptedException, KeeperException {
-        // Initialize paths with namespace
+        // Initialize paths with namespace (construct namespace paths)
         String prefix = (zkNamespace != null && !zkNamespace.isEmpty()) ? "/" + zkNamespace : "";
-        PEERS_PATH = prefix + "/peers";
-        LEADER_PATH = prefix + "/leader";
+        PEERS_PATH = prefix + "/peers";   // Store all nodes
+        LEADER_PATH = prefix + "/leader"; // Store leader information
         
         logger.info("Initializing ZooKeeper connection to: {}", zkConnectString);
         logger.info("Using namespace: {}", zkNamespace != null && !zkNamespace.isEmpty() ? zkNamespace : "(none)");
         logger.info("Peers path: {}, Leader path: {}", PEERS_PATH, LEADER_PATH);
+        // Connect to ZooKeeper
         connect();
     }
 
     private void connect() throws IOException, InterruptedException, KeeperException {
+        // Create a ZooKeeper client
         zooKeeper = new ZooKeeper(zkConnectString, sessionTimeout, this);
 
         // Wait for connection
@@ -107,7 +109,7 @@ public class ZooKeeperService implements Watcher {
                 PEERS_PATH + "/peer-",
                 myDescription.getBytes(StandardCharsets.UTF_8),
                 ZooDefs.Ids.OPEN_ACL_UNSAFE,
-                CreateMode.EPHEMERAL_SEQUENTIAL
+                CreateMode.EPHEMERAL_SEQUENTIAL    // Key: Temporary Sequential Nodes
         );
 
         // Extract the peer ID from the full path
@@ -159,11 +161,12 @@ public class ZooKeeperService implements Watcher {
 
     private void tryToBecomeLeader() {
         try {
+            // Attempt to create the /leader node (ephemeral node)
             zooKeeper.create(
                     LEADER_PATH,
                     myId.getBytes(StandardCharsets.UTF_8),
                     ZooDefs.Ids.OPEN_ACL_UNSAFE,
-                    CreateMode.EPHEMERAL
+                    CreateMode.EPHEMERAL    // Temporary node, automatically deleted when the leader disconnects.
             );
 
             currentLeader = myId;
@@ -171,13 +174,13 @@ public class ZooKeeperService implements Watcher {
             logger.info("Successfully became leader!");
 
         } catch (KeeperException.NodeExistsException e) {
-            // Someone else became leader first
+            // Someone else became leader first (The node already exists, indicating that another node has become the leader.)
             logger.info("Failed to become leader, node already exists");
-            leaderStatus = LeaderStatus.WAITING;
+            leaderStatus = LeaderStatus.WAITING;  // Continue listening to the leader
             watchLeader();
         } catch (KeeperException | InterruptedException e) {
             logger.error("Error trying to become leader", e);
-            leaderStatus = LeaderStatus.WAITING;
+            leaderStatus = LeaderStatus.WAITING; 
         }
     }
 
@@ -226,23 +229,23 @@ public class ZooKeeperService implements Watcher {
                     zkStatus = ZooKeeperStatus.DISCONNECTED;
                     logger.error("Session expired, need to reconnect");
                     try {
-                        reconnect();
+                        reconnect();  // Session expired, reconnect
                     } catch (Exception e) {
                         logger.error("Failed to reconnect", e);
                     }
                     break;
             }
         } else {
-            // Data changed
+            // Node data changed
             String path = event.getPath();
 
             if (path != null) {
                 if (path.equals(PEERS_PATH)) {
                     // Peers list changed
-                    updatePeersList();
+                    updatePeersList();   // Changes in the list of peer nodes
                 } else if (path.equals(LEADER_PATH)) {
                     // Leader changed
-                    watchLeader();
+                    watchLeader();    // Leader change (outgoing or new leader)
                 }
             }
         }
