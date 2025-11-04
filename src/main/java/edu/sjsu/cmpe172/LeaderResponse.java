@@ -14,6 +14,7 @@ public class LeaderResponse {
 
     public LeaderResponse(String status, String zookeeper, String leader,
                           String myid, String description, List<String> peers) {
+        // Create response object
         this.status = status;
         this.zookeeper = zookeeper;
         this.leader = leader;
