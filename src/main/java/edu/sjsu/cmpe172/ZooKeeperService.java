@@ -15,6 +15,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
+
+/**
+ * ZooKeeper Service - Handles leader election stuff
+ * Basically connects to ZK and tries to become the leader
+ * If can't become leader, just waits and tries again when leader dies
+ */
 @Service
 public class ZooKeeperService implements Watcher {
     // Implement the Watcher interface: used to listen for ZooKeeper events
@@ -59,6 +65,10 @@ public class ZooKeeperService implements Watcher {
     // The initial value is 1. Calling await() will block. After calling countDown(), the value becomes 0, and await() will unblock.
     private final CountDownLatch connectedSignal = new CountDownLatch(1);
 
+    /**
+     * Spring calls this automatically on startup
+     * Sets up paths and connects to ZK
+     */
     @PostConstruct                           // reference: https://docs.spring.io/spring-framework/reference/core/beans/annotation-config/postconstruct-and-predestroy-annotations.html
     // Create a new object → inject @Value → call the @PostConstruct method
     public void init() throws IOException, InterruptedException, KeeperException {
@@ -78,6 +88,14 @@ public class ZooKeeperService implements Watcher {
         connect();
     }
 
+    /**
+     * Main connection logic
+     * 1. Create ZK client
+     * 2. Wait for connection success
+     * 3. Create necessary paths
+     * 4. Register myself as a peer
+     * 5. Start watching for leader
+     */
     private void connect() throws IOException, InterruptedException, KeeperException {           // reference: https://www.baeldung.com/java-zookeeper
         // Create a ZooKeeper client
         zooKeeper = new ZooKeeper(zkConnectString, sessionTimeout, this);
@@ -102,6 +120,10 @@ public class ZooKeeperService implements Watcher {
         // Check if there is a leader; if not, try to become a leader.
     }
 
+    /**
+     * Recursively create path if it doesn't exist
+     * ZK doesn't auto-create parent paths, so gotta do it layer by layer
+     */
     private void createPathIfNotExists(String path) throws KeeperException, InterruptedException {    // reference:https://ishan-aggarwal.medium.com/leader-election-distributed-systems-c026cf5afb86
         // Create the path (if it does not exist)
 
@@ -140,6 +162,12 @@ public class ZooKeeperService implements Watcher {
         }
     }
 
+    /**
+     * Register myself as a peer node
+     * Uses EPHEMERAL_SEQUENTIAL mode:
+     * - EPHEMERAL: Temp node, auto-deleted when I disconnect
+     * - SEQUENTIAL: ZK auto-appends a number suffix
+     */
     private void registerAsPeer() throws KeeperException, InterruptedException {              // reference: https://zookeeper.apache.org/doc/r3.1.2/zookeeperTutorial.html
         // Register as a node in the cluster
         String peerPath = zooKeeper.create(
@@ -157,6 +185,10 @@ public class ZooKeeperService implements Watcher {
         logger.info("Registered as peer: {}", myId);
     }
 
+    /**
+     * Update the peer list
+     * Just checks how many nodes are under /peers
+     */
     private void updatePeersList() {                      // reference: https://bikas-katwal.medium.com/zookeeper-introduction-designing-a-distributed-system-using-zookeeper-and-java-7f1b108e236e
         // Update node list
         try {
@@ -175,7 +207,13 @@ public class ZooKeeperService implements Watcher {
             logger.error("Error updating peers list", e);
         }
     }
-                                            // reference: https://codemia.io/knowledge-hub/path/how_to_re-register_zookeeper_watches
+
+    /**
+     * Watch the leader node
+     * THIS IS THE CORE LOGIC!
+     * 1. If leader exists, check if it's me
+     * 2. If no leader and I want to be leader, go compete for it
+     */                                             // reference: https://codemia.io/knowledge-hub/path/how_to_re-register_zookeeper_watches
     private void watchLeader() {
         // Listen to the leader node
         try {
@@ -228,6 +266,11 @@ public class ZooKeeperService implements Watcher {
         }
     }
 
+    /**
+     * Try to become the leader
+     * Simple principle: whoever creates /leader node first becomes leader
+     * ZK guarantees atomicity of create operation, so only one can succeed
+     */
     private void tryToBecomeLeader() {                    // reference: https://zookeeper.apache.org/doc/r3.1.2/zookeeperTutorial.html
         // Try to become a leader
         // Principle: Whoever creates the /leader node first becomes the leader.
@@ -259,6 +302,10 @@ public class ZooKeeperService implements Watcher {
         }
     }
 
+    /**
+     * Actively start competing for leadership
+     * Controller can call this method
+     */
     public void startLeading() {
         // Start running for leader
         wantsToLead = true;  // Set flag: I want to be a leader
@@ -270,6 +317,10 @@ public class ZooKeeperService implements Watcher {
         // Upon successful connection, an election attempt will be automatically retried.
     }
 
+    /**
+     * Actively give up leadership
+     * If I'm the leader, delete the node and switch to watching
+     */
     public void stopLeading() {
         // Stop campaigning and enter observation mode
         wantsToLead = false;  // clear flag
@@ -293,6 +344,11 @@ public class ZooKeeperService implements Watcher {
         watchLeader();  // Continue listening (although not participating in the election)
     }
 
+    /**
+     * Event callback method
+     * All ZK events trigger this method
+     * Including: connection state changes, node changes, etc.
+     */
     @Override                                                               // reference:https://ishan-aggarwal.medium.com/leader-election-distributed-systems-c026cf5afb86
     public void process(WatchedEvent event) {
         // This callback is triggered by all events in ZooKeeper.
@@ -339,6 +395,10 @@ public class ZooKeeperService implements Watcher {
         }
     }
 
+    /**
+     * Reconnect to ZK
+     * Need to recreate ZK client when session expires
+     */
     private void reconnect() throws IOException, InterruptedException, KeeperException {
         // Reconnect to ZooKeeper
         // Called when session expires
@@ -356,6 +416,10 @@ public class ZooKeeperService implements Watcher {
         // If wantToLead=true, attempt to run for leader.
     }
 
+    /**
+     * Called when Spring container shuts down
+     * Close ZK connection and cleanup resources
+     */
     @PreDestroy                   // reference:https://www.geeksforgeeks.org/java/bean-life-cycle-in-java-spring/ https://www.geeksforgeeks.org/devops/sessions-and-lifecycle-in-zookeeper/
     // Execution timing: When the application is closed
     public void cleanup() {
@@ -374,6 +438,9 @@ public class ZooKeeperService implements Watcher {
             logger.error("Error closing ZooKeeper connection", e);
         }
     }
+
+    // ========== Getter Methods ==========
+    // For the Controller to query current status
 
     // Getters
     public LeaderStatus getLeaderStatus() {
