@@ -50,7 +50,10 @@ public class ZooKeeperService implements Watcher {
     private List<String> peers = Collections.emptyList();   // list of all nodes
     private LeaderStatus leaderStatus = LeaderStatus.WATCHING;    // My initial status was WATCHING
     private ZooKeeperStatus zkStatus = ZooKeeperStatus.DISCONNECTED;    // Connection status, initially disconnected
-    private boolean wantsToLead = false;  // My initial value for whether I want to be a leader is false.
+
+    // IMPORTANT FIX! Changed to true so nodes automatically compete for leadership
+    // Was false before which caused no one to compete = no leader elected
+    private boolean wantsToLead = true;  // Do I want to be leader?
 
     // Used to wait for a successful connection 
     // The initial value is 1. Calling await() will block. After calling countDown(), the value becomes 0, and await() will unblock.
@@ -315,12 +318,8 @@ public class ZooKeeperService implements Watcher {
                     // Session expired
                     // All ephemeral nodes have been deleted
                     zkStatus = ZooKeeperStatus.DISCONNECTED;
-                    logger.error("Session expired, need to reconnect");
-                    try {
-                        reconnect();  // Session expired, reconnect
-                    } catch (Exception e) {
-                        logger.error("Failed to reconnect", e);
-                    }
+                    logger.error("Session expired");
+                    System.exit(2); // exit the service   // Important fix! change expired case to exit instead of reconnect
                     break;
             }
         } else {
@@ -364,6 +363,7 @@ public class ZooKeeperService implements Watcher {
         try {
             if (zooKeeper != null) {
                 zooKeeper.close();  // close connection
+                logger.info("ZK connection closed");
                 // After closing the connection:
                 // The session ends.
                 // All ephemeral nodes are automatically deleted
