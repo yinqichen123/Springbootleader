@@ -306,7 +306,7 @@ public class ZooKeeperService implements Watcher {
      * Actively start competing for leadership
      * Controller can call this method
      */
-    public void startLeading() {
+    public void startLeading() {                                                          // reference:https://www.geeksforgeeks.org/devops/sessions-and-lifecycle-in-zookeeper/
         // Start running for leader
         wantsToLead = true;  // Set flag: I want to be a leader
         if (zkStatus == ZooKeeperStatus.CONNECTED) {
