@@ -349,7 +349,7 @@ public class ZooKeeperService implements Watcher {
      * All ZK events trigger this method
      * Including: connection state changes, node changes, etc.
      */
-    @Override                                                               // reference:https://ishan-aggarwal.medium.com/leader-election-distributed-systems-c026cf5afb86
+    @Override                                                               // reference:https://ishan-aggarwal.medium.com/leader-election-distributed-systems-c026cf5afb86, https://zookeeper.apache.org/doc/r3.4.6/javaExample.html
     public void process(WatchedEvent event) {
         // This callback is triggered by all events in ZooKeeper.
         logger.info("Received event: {}", event);
@@ -399,7 +399,7 @@ public class ZooKeeperService implements Watcher {
      * Reconnect to ZK
      * Need to recreate ZK client when session expires
      */
-    private void reconnect() throws IOException, InterruptedException, KeeperException {
+    private void reconnect() throws IOException, InterruptedException, KeeperException {   // reference: https://www.waitingforcode.com/apache-zookeeper/session-in-apache-zookeeper/read
         // Reconnect to ZooKeeper
         // Called when session expires
         if (zooKeeper != null) {
