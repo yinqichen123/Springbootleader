@@ -54,7 +54,7 @@ public class ZooKeeperService implements Watcher {
     private String myId;         // my ID
     private String currentLeader;  // Current leader's ID
     private List<String> peers = Collections.emptyList();   // list of all nodes
-    private LeaderStatus leaderStatus = LeaderStatus.WATCHING;    // My initial status was WATCHING
+    private LeaderStatus leaderStatus = LeaderStatus.WAITING;    // Improtant fix! Make initial status as WAITING
     private ZooKeeperStatus zkStatus = ZooKeeperStatus.DISCONNECTED;    // Connection status, initially disconnected
 
     // IMPORTANT FIX! Changed to true so nodes automatically compete for leadership
