@@ -425,7 +425,7 @@ public class ZooKeeperService implements Watcher {
     public void cleanup() {
         // Clean up resources
         try {
-            if (zooKeeper != null) {
+            if (zooKeeper != null) {  // Check if the connection exists
                 zooKeeper.close();  // close connection
                 logger.info("ZK connection closed");
                 // After closing the connection:
