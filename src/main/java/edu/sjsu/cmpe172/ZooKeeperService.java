@@ -98,7 +98,7 @@ public class ZooKeeperService implements Watcher {
      */
     private void connect() throws IOException, InterruptedException, KeeperException {           // reference: https://www.baeldung.com/java-zookeeper
         // Create a ZooKeeper client
-        zooKeeper = new ZooKeeper(zkConnectString, sessionTimeout, this);
+        zooKeeper = new ZooKeeper(zkConnectString, sessionTimeout, this);                        // reference: https://zookeeper.apache.org/doc/r3.4.6/api/org/apache/zookeeper/ZooKeeper.html
 
         // Wait for connection
         connectedSignal.await();
@@ -227,7 +227,7 @@ public class ZooKeeperService implements Watcher {
                 // Case 1: Leader Exists 
 
                 // Read the leader's ID
-                byte[] data = zooKeeper.getData(LEADER_PATH, this, null);
+                byte[] data = zooKeeper.getData(LEADER_PATH, this, null);             // reference: https://zookeeper.apache.org/doc/r3.4.6/api/org/apache/zookeeper/ZooKeeper.html
                 // Parameters:
                 // LEADER_PATH: Path
                 // this: Sets the listener
@@ -328,7 +328,7 @@ public class ZooKeeperService implements Watcher {
         // If we're currently the leader, give up leadership
         if (leaderStatus == LeaderStatus.LEADING) {             // reference: https://www.php.net/manual/en/zookeeper.delete.php
             try {
-                zooKeeper.delete(LEADER_PATH, -1);
+                zooKeeper.delete(LEADER_PATH, -1);              // reference: https://zookeeper.apache.org/doc/r3.4.6/api/org/apache/zookeeper/ZooKeeper.html
                 // Delete the /leader node
                 // Parameters:
                 // LEADER_PATH: Path
